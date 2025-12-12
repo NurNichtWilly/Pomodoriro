@@ -7,6 +7,10 @@ APP_BUNDLE="$RELEASE_DIR/$APP_NAME.app"
 BINARY_PATH=".build/release/$APP_NAME"
 SOURCE_ICON="appicon/Gemini_Generated_Image_t0ohxct0ohxct0oh Background Removed.png"
 
+# Build Release
+echo "Building Release..."
+swift build -c release
+
 # Clean up previous build
 rm -rf "$RELEASE_DIR"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
@@ -55,9 +59,9 @@ cat > "$APP_BUNDLE/Contents/Info.plist" <<EOF
     <key>CFBundleDisplayName</key>
     <string>$APP_NAME</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.3</string>
+    <string>0.3.1</string>
     <key>CFBundleVersion</key>
-    <string>3</string>
+    <string>4</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
