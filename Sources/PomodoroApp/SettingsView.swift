@@ -13,6 +13,13 @@ struct SettingsView: View {
             
             Toggle("Always on Top", isOn: $appState.isAlwaysOnTop)
             
+            Picker("View Style", selection: $appState.viewStyle) {
+                ForEach(ViewStyle.allCases) { style in
+                    Text(style.displayName).tag(style)
+                }
+            }
+            .pickerStyle(.segmented)
+            
             GroupBox(label: Text("Durations (minutes)")) {
                 Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 10) {
                     GridRow {

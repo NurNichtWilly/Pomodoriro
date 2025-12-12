@@ -7,6 +7,40 @@ struct ContentView: View {
     @State private var showSettings = false
 
     var body: some View {
+        Group {
+            switch appState.viewStyle {
+            case .immersive:
+                immersiveView
+            case .classic:
+                classicView
+            }
+        }
+        .frame(minWidth: 350, minHeight: 250)
+        .background(WindowAccessor(appState: appState))
+        .onAppear {
+             appState.isWindowVisible = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)) { notification in
+            if let window = notification.object as? NSWindow, window.isKeyWindow {
+                appState.isWindowVisible = false
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button(action: {
+                    showSettings = true
+                }) {
+                    Image(systemName: "gear")
+                }
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+             SettingsView()
+                 .environmentObject(appState)
+        }
+    }
+    
+    var immersiveView: some View {
         ZStack {
             // Background Layer
             Color(NSColor.windowBackgroundColor)
@@ -20,18 +54,9 @@ struct ContentView: View {
             // Main Content
             VStack {
                 // Mode Picker (Top)
-                Picker("Mode", selection: Binding(
-                    get: { timer.mode },
-                    set: { timer.switchMode($0) }
-                )) {
-                    Text("Work").tag(PomodoroTimer.Mode.work)
-                    Text("Short Break").tag(PomodoroTimer.Mode.shortBreak)
-                    Text("Long Break").tag(PomodoroTimer.Mode.longBreak)
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .padding(.top, 20)
-                .frame(maxWidth: 300)
+                modePicker
+                    .padding(.top, 20)
+                    .frame(maxWidth: 300)
                 
                 Spacer()
                 
@@ -55,63 +80,100 @@ struct ContentView: View {
                 Spacer()
                 
                 // Controls (Bottom)
-                HStack(spacing: 30) {
-                    Button(action: {
-                        if timer.isRunning {
-                            timer.pause()
-                        } else {
-                            timer.start()
-                        }
-                    }) {
-                        Image(systemName: timer.isRunning ? "pause.fill" : "play.fill")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 30, height: 30)
-                            .padding()
-                    }
-                    .buttonStyle(.plain)
-                    .background(Circle().fill(modeColor(for: timer.mode).opacity(0.2)))
-                    .overlay(Circle().stroke(modeColor(for: timer.mode), lineWidth: 2))
-                    
-                    Button(action: {
-                        timer.stop()
-                    }) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 20, height: 20)
-                            .padding()
-                    }
-                    .buttonStyle(.plain)
-                    .background(Circle().fill(Color.gray.opacity(0.2)))
-                    .overlay(Circle().stroke(Color.gray, lineWidth: 2))
-                }
-                .padding(.bottom, 30)
+                immersiveControls
+                    .padding(.bottom, 30)
             }
             .padding()
         }
         .frame(minWidth: 500, minHeight: 400)
-        .background(WindowAccessor(appState: appState))
-        .onAppear {
-             appState.isWindowVisible = true
+    }
+    
+    var classicView: some View {
+        VStack(spacing: 20) {
+            modePicker
+            
+            Text(timeString(from: timer.remainingSeconds))
+                .font(.system(size: 200, weight: .bold, design: .monospaced))
+                .minimumScaleFactor(0.1)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
+            
+            Text("Sessions Completed: \(timer.completedSessions)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            classicControls
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)) { notification in
-            if let window = notification.object as? NSWindow, window.isKeyWindow {
-                appState.isWindowVisible = false
+        .padding(30)
+    }
+    
+    var modePicker: some View {
+        Picker("Mode", selection: Binding(
+            get: { timer.mode },
+            set: { timer.switchMode($0) }
+        )) {
+            Text("Work").tag(PomodoroTimer.Mode.work)
+            Text("Short Break").tag(PomodoroTimer.Mode.shortBreak)
+            Text("Long Break").tag(PomodoroTimer.Mode.longBreak)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+    }
+    
+    var immersiveControls: some View {
+        HStack(spacing: 30) {
+            Button(action: toggleTimer) {
+                Image(systemName: timer.isRunning ? "pause.fill" : "play.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                    .padding()
             }
-        }
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Button(action: {
-                    showSettings = true
-                }) {
-                    Image(systemName: "gear")
-                }
+            .buttonStyle(.plain)
+            .background(Circle().fill(modeColor(for: timer.mode).opacity(0.2)))
+            .overlay(Circle().stroke(modeColor(for: timer.mode), lineWidth: 2))
+            
+            Button(action: { timer.stop() }) {
+                Image(systemName: "arrow.counterclockwise")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 20, height: 20)
+                    .padding()
             }
+            .buttonStyle(.plain)
+            .background(Circle().fill(Color.gray.opacity(0.2)))
+            .overlay(Circle().stroke(Color.gray, lineWidth: 2))
         }
-        .sheet(isPresented: $showSettings) {
-             SettingsView()
-                 .environmentObject(appState)
+    }
+    
+    var classicControls: some View {
+        HStack(spacing: 15) {
+            Button(action: toggleTimer) {
+                Image(systemName: timer.isRunning ? "pause.fill" : "play.fill")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .padding()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            
+            Button(action: { timer.stop() }) {
+                Image(systemName: "arrow.counterclockwise")
+                    .resizable()
+                    .frame(width: 15, height: 15)
+                    .padding()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+        }
+    }
+    
+    func toggleTimer() {
+        if timer.isRunning {
+            timer.pause()
+        } else {
+            timer.start()
         }
     }
 
