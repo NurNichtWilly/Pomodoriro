@@ -59,9 +59,9 @@ cat > "$APP_BUNDLE/Contents/Info.plist" <<EOF
     <key>CFBundleDisplayName</key>
     <string>$APP_NAME</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.3.1</string>
+    <string>0.3.2</string>
     <key>CFBundleVersion</key>
-    <string>4</string>
+    <string>5</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
@@ -76,7 +76,14 @@ cat > "$APP_BUNDLE/Contents/Info.plist" <<EOF
 </plist>
 EOF
 
+
 echo "App bundle created at $APP_BUNDLE"
+
+# Code Signing (Ad-hoc)
+# Required for Apple Silicon and to avoid some "Damaged" errors, though Notarization is needed for full distribution support.
+echo "Signing app bundle..."
+codesign --force --deep --sign - "$APP_BUNDLE"
+
 
 # Create DMG
 DMG_NAME="$APP_NAME.dmg"
