@@ -18,6 +18,12 @@ struct SettingsView: View {
             Toggle("Do Not Disturb Integration", isOn: $appState.isDNDEnabled)
                 .help("Automatically enable Focus Mode during work sessions")
             
+            if appState.isDNDEnabled {
+                Text("Requires 'Pomodoro Focus On' and 'Pomodoro Focus Off' shortcuts.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
             Picker("View Style", selection: $appState.viewStyle) {
                 ForEach(ViewStyle.allCases) { style in
                     Text(style.displayName).tag(style)

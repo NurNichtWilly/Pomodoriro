@@ -1,4 +1,5 @@
 import SwiftUI
+import PomodoroEngine
 
 struct WindowAccessor: NSViewRepresentable {
     @ObservedObject var appState: AppState

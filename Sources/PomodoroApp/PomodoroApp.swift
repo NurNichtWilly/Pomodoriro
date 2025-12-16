@@ -12,7 +12,7 @@ struct PomodoroApp: App {
     }
 
     var body: some Scene {
-        WindowGroup(id: "timer") {
+        Window("Pomodoro Timer", id: "timer") {
             ContentView()
                 .environmentObject(timer)
                 .environmentObject(appState)
@@ -95,14 +95,8 @@ extension PomodoroApp {
     }
 
     func updateDND(timer: PomodoroTimer, appState: AppState) {
-        guard appState.isDNDEnabled else { return }
-        
-        let shouldBeActive = timer.isRunning && timer.mode == .work
-        
-        // Note: Programmatically toggling DND on macOS requires special entitlements or user shortcuts.
-        // This is a placeholder for where that logic would go.
-        // Example: Process.run(URL(fileURLWithPath: "/usr/bin/shortcuts"), arguments: ["run", shouldBeActive ? "Start Focus" : "End Focus"])
-        
-        print("[DND Integration] Focus Mode should be \(shouldBeActive ? "ON" : "OFF")")
+        let dndManager = DNDManager()
+        let runner = ProcessShortcutRunner()
+        dndManager.updateDND(timer: timer, appState: appState, runner: runner)
     }
 }

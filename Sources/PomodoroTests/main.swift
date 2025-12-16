@@ -156,6 +156,55 @@ assert(timer.completedSessions == 1, "Does not increment on break completion")
     await runLoop() // Wait for Task
     assert(timer.remainingSeconds == 99, "Decrements by 1 second when running (Async)")
 
+    // Test: DND Integration
+    print("Testing DND Integration...")
+    let dndManager = DNDManager()
+    let dndTimer = PomodoroTimer()
+    let dndAppState = AppState()
+    
+    // 1. DND Disabled
+    dndAppState.isDNDEnabled = false
+    dndTimer.switchMode(.work)
+    dndTimer.start()
+    assert(dndManager.shouldEnableDND(timer: dndTimer, appState: dndAppState) == false, "DND should be disabled when setting is off")
+    
+    // 2. DND Enabled, Timer Stopped
+    dndAppState.isDNDEnabled = true
+    dndTimer.stop()
+    assert(dndManager.shouldEnableDND(timer: dndTimer, appState: dndAppState) == false, "DND should be disabled when timer is stopped")
+    
+    // 3. DND Enabled, Work Mode, Running
+    dndTimer.switchMode(.work)
+    dndTimer.start()
+    assert(dndManager.shouldEnableDND(timer: dndTimer, appState: dndAppState) == true, "DND should be enabled during work session")
+    
+    // 4. DND Enabled, Break Mode, Running
+    dndTimer.switchMode(.shortBreak)
+    dndTimer.start()
+    assert(dndManager.shouldEnableDND(timer: dndTimer, appState: dndAppState) == false, "DND should be disabled during break")
+
+    // 5. Test Shortcut Execution
+    class MockShortcutRunner: ShortcutRunner {
+        var lastRunShortcut: String?
+        func runShortcut(named name: String) {
+            lastRunShortcut = name
+        }
+    }
+    
+    let mockRunner = MockShortcutRunner()
+    
+    // Test: Turn ON
+    dndAppState.isDNDEnabled = true
+    dndTimer.switchMode(.work)
+    dndTimer.start()
+    dndManager.updateDND(timer: dndTimer, appState: dndAppState, runner: mockRunner)
+    assert(mockRunner.lastRunShortcut == "Pomodoro Focus On", "Should run 'Pomodoro Focus On' shortcut")
+    
+    // Test: Turn OFF (Pause)
+    dndTimer.pause()
+    dndManager.updateDND(timer: dndTimer, appState: dndAppState, runner: mockRunner)
+    assert(mockRunner.lastRunShortcut == "Pomodoro Focus Off", "Should run 'Pomodoro Focus Off' shortcut")
+
     print("All tests passed!")
 }
 
