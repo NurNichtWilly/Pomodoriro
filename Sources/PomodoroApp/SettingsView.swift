@@ -1,10 +1,12 @@
 import SwiftUI
 import PomodoroEngine
+import Analytics
 
 struct SettingsView: View {
     @EnvironmentObject var timer: PomodoroTimer
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
+    @Environment(\.openWindow) var openWindow
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -12,6 +14,9 @@ struct SettingsView: View {
                 .font(.headline)
             
             Toggle("Always on Top", isOn: $appState.isAlwaysOnTop)
+            
+            Toggle("Do Not Disturb Integration", isOn: $appState.isDNDEnabled)
+                .help("Automatically enable Focus Mode during work sessions")
             
             Picker("View Style", selection: $appState.viewStyle) {
                 ForEach(ViewStyle.allCases) { style in
@@ -67,6 +72,10 @@ struct SettingsView: View {
             
             HStack {
                 Spacer()
+                Button("Show Analytics") {
+                    openWindow(id: "analytics")
+                    NSApp.activate(ignoringOtherApps: true)
+                }
                 Button("Done") {
                     dismiss()
                 }

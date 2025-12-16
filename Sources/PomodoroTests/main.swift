@@ -1,5 +1,6 @@
 import Foundation
 import PomodoroEngine
+import Analytics
 
 func assert(_ condition: Bool, _ message: String) {
     if !condition {
@@ -102,6 +103,37 @@ timer.start()
 timer.tick()
 await runLoop()
 assert(timer.completedSessions == 1, "Does not increment on break completion")
+
+    // Test: Analytics (Mock)
+    class MockAnalytics: Analytics {
+        var events: [(String, [String:String]?)] = []
+        func trackEvent(_ name: String, properties: [String : String]?) {
+            events.append((name, properties))
+        }
+    }
+
+    let mock = MockAnalytics()
+    timer.analytics = mock
+
+    // Start should emit timer_start
+    timer.start()
+    assert(mock.events.contains(where: { $0.0 == "timer_start" }), "Emits timer_start when started")
+
+    // Completion should emit session_completed
+    timer.switchMode(.work)
+    timer.remainingSeconds = 1
+    mock.events.removeAll()
+    timer.start()
+    timer.tick()
+    await runLoop()
+    assert(mock.events.contains(where: { $0.0 == "session_completed" }), "Emits session_completed on work completion")
+
+    // ConsoleAnalytics should publish to AnalyticsCenter for UI
+    AnalyticsCenter.shared.clear()
+    timer.analytics = ConsoleAnalytics()
+    timer.start()
+    await runLoop()
+    assert(AnalyticsCenter.shared.events.contains(where: { $0.name == "timer_start" }), "ConsoleAnalytics publishes to AnalyticsCenter")
 
     // Test: Custom Durations
     timer.workDuration = 60

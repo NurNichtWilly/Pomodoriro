@@ -11,17 +11,23 @@ let package = Package(
     products: [
         .executable(name: "Pomodoriro", targets: ["PomodoroApp"]),
         .library(name: "PomodoroEngine", targets: ["PomodoroEngine"]),
+        .library(name: "Analytics", targets: ["Analytics"]),
     ],
     targets: [
         // Core Logic
         .target(
             name: "PomodoroEngine",
+            dependencies: ["Analytics"]
+        ),
+        // Analytics
+        .target(
+            name: "Analytics",
             dependencies: []
         ),
         // UI / Executable
         .executableTarget(
             name: "PomodoroApp",
-            dependencies: ["PomodoroEngine"]
+            dependencies: ["PomodoroEngine", "Analytics"]
         ),
         // Manual Tests (Bypassing XCTest)
         .executableTarget(

@@ -1,0 +1,44 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Pomodoriro}",
+            "name": "Debug Pomodoriro",
+            "target": "Pomodoriro",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug Pomodoriro"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Pomodoriro}",
+            "name": "Release Pomodoriro",
+            "target": "Pomodoriro",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release Pomodoriro"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Pomodoriro}",
+            "name": "Debug PomodoroTests",
+            "target": "PomodoroTests",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug PomodoroTests"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Pomodoriro}",
+            "name": "Release PomodoroTests",
+            "target": "PomodoroTests",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release PomodoroTests"
+        }
+    ]
+}

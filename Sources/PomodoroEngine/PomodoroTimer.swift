@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Analytics
 
 @MainActor
 public class PomodoroTimer: ObservableObject {
@@ -19,6 +20,9 @@ public class PomodoroTimer: ObservableObject {
     @Published public var longBreakDuration: Int
 
     public var onTimerComplete: (() -> Void)?
+
+    /// Optional analytics sink. Inject in the App for telemetry.
+    public var analytics: Analytics?
 
     public init() {
         self.mode = .work
@@ -43,6 +47,7 @@ public class PomodoroTimer: ObservableObject {
         case .longBreak:
             self.remainingSeconds = longBreakDuration
         }
+        analytics?.trackEvent("mode_switched", properties: ["mode": "\(mode)"])
     }
 
     private var internalTimer: Timer?
@@ -53,12 +58,14 @@ public class PomodoroTimer: ObservableObject {
         self.internalTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.tick()
         }
+        analytics?.trackEvent("timer_start", properties: ["mode": "\(mode)"])
     }
 
     public func pause() {
         self.isRunning = false
         self.internalTimer?.invalidate()
         self.internalTimer = nil
+        analytics?.trackEvent("timer_pause", properties: ["mode": "\(mode)"])
     }
 
     public func stop() {
@@ -74,6 +81,7 @@ public class PomodoroTimer: ObservableObject {
         case .longBreak:
             self.remainingSeconds = longBreakDuration
         }
+        analytics?.trackEvent("timer_stop", properties: ["mode": "\(mode)"])
     }
 
     nonisolated public func tick() {
@@ -83,7 +91,9 @@ public class PomodoroTimer: ObservableObject {
                 if remainingSeconds == 0 {
                     if mode == .work {
                         completedSessions += 1
+                        analytics?.trackEvent("session_completed", properties: ["completedSessions": "\(completedSessions)"])
                     }
+                    analytics?.trackEvent("timer_complete", properties: ["mode": "\(mode)"])
                     isRunning = false
                     internalTimer?.invalidate()
                     internalTimer = nil
